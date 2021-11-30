@@ -2,9 +2,12 @@ import argparse
 
 import numpy as np
 import os
+import json
 
 import tensorflow as tf
 from AnimeGANv2.net import generator as tf_generator
+
+from torchviz import make_dot
 
 import torch
 from model import Generator
@@ -27,7 +30,10 @@ def load_tf_weights(tf_path):
 
         tf_weights = {}
         for v in tf.trainable_variables():
+            print("Load key ", v.name.replace("/", "\t"), "\t", json.dumps(v.eval().shape))
             tf_weights[v.name] = v.eval()
+#            break
+    print("Load finish, ", len(tf_weights), "keys")
     
     return tf_weights
 
@@ -115,9 +121,11 @@ def convert_and_save(tf_checkpoint_path, save_name):
         assert torch_weights[torch_k].shape == converted_weight.shape, f"shape mismatch: {k}"
 
         torch_converted_weights[torch_k] = converted_weight
+        print("Totch key ", torch_k, "\t", converted_weight.shape)
 
     assert sorted(list(torch_converted_weights)) == sorted(list(torch_weights)), f"some weights are missing"
     torch_net.load_state_dict(torch_converted_weights)    
+
     torch.save(torch_net.state_dict(), save_name)
     print(f"PyTorch model saved at {save_name}")
     
@@ -128,12 +136,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--tf_checkpoint_path',
         type=str,
-        default='AnimeGANv2/checkpoint/generator_Paprika_weight',
+        #default='AnimeGANv2/checkpoint/generator_Paprika_weight',
+        #default='AnimeGANv2/checkpoint/generator_Shinkai_weight',
+        default='AnimeGANv2/checkpoint/generator_Hayao_weight',
     )
     parser.add_argument(
         '--save_name', 
         type=str, 
-        default='pytorch_generator_Paprika.pt',
+        #default='pytorch_generator_Paprika.pt',
+        #default='pytorch_generator_Shinkai.pt',
+        default='pytorch_generator_Hayao.pt',
     )
     args = parser.parse_args()
     
